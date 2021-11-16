@@ -2,41 +2,34 @@ const User = require('../models/user');
 
 
 module.exports.profile = function(req, res){
-    if (req.cookies.user_id){
-        User.findById(req.cookies.user_id, function(err, user){
-            if (user){
-                return res.render('profile', {
-                    title: "User Profile",
-                    user: user
-                })
-            }else{
-                return res.redirect('/user/signIn');
-
-            }
-        });
-    }else{
-        return res.redirect('/users/signIn');
-
+    if(! req.isAuthenticated()){
+        return res.redirect('/user/signIn');
     }
-
-
-    
+    return res.render('profile', {
+        title: 'User Profile'
+    });
 }
 
 
 // render the sign up page
 module.exports.signUp = function(req, res){
+    if(req.isAuthenticated()){
+        return res.redirect('/user/profile');
+    }
     return res.render('signUp', {
         title: "FunChat | Sign Up"
-    })
+    });
 }
 
 
 // render the sign in page
 module.exports.signIn = function(req, res){
+    if(req.isAuthenticated()){
+        return res.redirect('/user/profile');
+    }
     return res.render('signIn', {
         title: "FunChat | Sign In"
-    })
+    });
 }
 
 // get the sign up data
@@ -63,27 +56,12 @@ module.exports.create = function(req, res){
 
 // sign in and create a session for the user
 module.exports.createSession = function(req, res){
+    return res.redirect('/user/profile');
+    
+}
 
-    User.findOne({email: req.body.email}, function(err, user){
-        if(err){console.log('error in finding user in signing in'); return}
-        // handle user found
-        if (user){
+module.exports.destroySession = function(req, res){
+    req.logout();
 
-            // handle password which doesn't match
-            if (user.password != req.body.password){
-                return res.redirect('back');
-            }
-
-            // handle session creation
-            res.cookie('user_id', user.id);
-            return res.redirect('/user/profile');
-
-        }else{
-            // handle user not found
-
-            return res.redirect('back');
-        }
-
-
-    });
+    return res.redirect('/user/signIn');
 }

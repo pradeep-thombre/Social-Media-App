@@ -11,6 +11,35 @@
         <li><i class="fas fa-users"></i></li>
         <li><i class="fas fa-user-cog"></i></li>
     </ul>
+    <ul>
+        <% if (locals.user){ %>
+            <li>
+                <button type="button">
+                    <a href="/user/profile">
+                        <%= user.name %>
+                    </a>
+                </button>
+            </li>
+            <li>
+                <button type="button">
+                    <a href="/user/signOut">Sign Out</a>
+                </button>
+            </li>
+        <% }else{ %>
+            <button type="button">
+                <li>
+                    <a href="/user/signIn">Sign In</a>
+                </li>
+            </button>
+            <button type="button">
+                <li>
+                    <a href="/user/signUp">Sign Up</a>
+                </li>
+            </button>
+
+
+        <% } %>
+    </ul>
 
     <input type="text" placeholder="type here to search">
     <button><i class="fas fa-search"></i> Search</button>
