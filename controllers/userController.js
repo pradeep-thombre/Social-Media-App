@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const posts=require('../models/post');
 
 
 module.exports.profile = function(req, res){
@@ -56,7 +57,7 @@ module.exports.create = function(req, res){
 
 // sign in and create a session for the user
 module.exports.createSession = function(req, res){
-    return res.redirect('/user/profile');
+    return res.redirect('/user/home');
     
 }
 
@@ -64,4 +65,21 @@ module.exports.destroySession = function(req, res){
     req.logout();
 
     return res.redirect('/user/signIn');
+}
+
+
+module.exports.home=function(req,res){
+    // posts.find({},function(err,posts){
+    //     return res.render('home',{
+    //         title:"Home",
+    //         posts:posts
+    //     });
+    // });
+
+    posts.find({}).populate('user').exec(function(err,posts){
+        return res.render('home',{
+            title:"Home",
+            posts:posts
+        });
+    });
 }

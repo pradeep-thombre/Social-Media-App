@@ -1,0 +1,19 @@
+<h1>Home</h1>
+
+<section id="posts">
+    <h1>Posts</h1>
+    <form id="new-Post" action="/posts/create" method="post">
+        <textarea name="content" id="" cols="30" rows="3" placeholder="Say Something about todays Activity...."></textarea>
+        <input type="Submit" value="Post">
+    </form>
+    <div id="post-list-container">
+        <ul>
+            <% for(post of posts){ %>
+                <li>
+                    <%= post.content %>
+                    <small><%= post.user.name%></small> 
+                </li>
+            <% } %>
+        </ul>
+    </div>
+</section>
