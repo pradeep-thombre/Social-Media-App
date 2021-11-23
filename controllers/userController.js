@@ -1,5 +1,5 @@
 const User = require('../models/user');
-const posts=require('../models/post');
+const Post=require('../models/post');
 
 
 module.exports.profile = function(req, res){
@@ -69,17 +69,19 @@ module.exports.destroySession = function(req, res){
 
 
 module.exports.home=function(req,res){
-    // posts.find({},function(err,posts){
-    //     return res.render('home',{
-    //         title:"Home",
-    //         posts:posts
-    //     });
-    // });
 
-    posts.find({}).populate('user').exec(function(err,posts){
-        return res.render('home',{
-            title:"Home",
-            posts:posts
+    Post.find({})
+    .populate('user')
+    .populate({
+        path: 'comments',
+        populate: {
+            path: 'user'
+        }
+    })
+    .exec(function(err, posts){
+        return res.render('home', {
+            title: "Codeial | Home",
+            posts:  posts
         });
-    });
+    })
 }
