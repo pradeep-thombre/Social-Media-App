@@ -1,24 +1,49 @@
 const User = require('../models/user');
 const Post=require('../models/post');
+const fs=require('fs');
+const path=require('path');
 
-
-module.exports.profile = function(req, res){
+module.exports.profile =async function(req, res){
     if(! req.isAuthenticated()){
+        req.flash('success','User Not Logged-In Redirecting to login ...');
         return res.redirect('/user/signIn');
     }
-    User.findById(req.params.id,function(err,user){
+    try{
+        let user=await User.findById(req.params.id);
+        req.flash('success','Redirecting to Profile ...');
         return res.render('profile', {
             title: 'User Profile',
             profileuser:user
         });
-    })
-    
+    }
+    catch(err){
+        return res.redirect('back');
+    }
 }
-module.exports.update=function(req,res){
+module.exports.update=async function(req,res){
     if(req.params.id==req.user.id){
-        User.findOneAndUpdate(req.params.id,req.body,function(err,user){
+        try{
+            let user=await User.findById(req.params.id);
+            User.uploadedAvatar(req,res,function(err){
+                if(err){console.log('*****Multer error:',err)}
+                user.name=req.body.name;
+                user.email=req.body.email;
+                if(req.file){
+                    if(user.avatar){
+                        fs.unlinkSync(path.join(__dirname,'..',user.avatar));
+                    }
+                    user.avatar=user.avatarPath+'/'+req.file.filename
+                }
+                user.save();
+            });
+            req.flash('success','User Details Updated Successfully!');
+        }catch(err){
+            req.flash('error','Error'+err);
+        }
+        finally{
             return res.redirect('back');
-        });
+        }
+        
     }
     else{
         return res.status(401).send('Unauthorized');
@@ -47,24 +72,24 @@ module.exports.signIn = function(req, res){
 }
 
 // get the sign up data
-module.exports.create = function(req, res){
+module.exports.create =async function(req, res){
     if (req.body.password != req.body.confirmpassword){
         return res.redirect('back');
     }
-
-    User.findOne({email: req.body.email}, function(err, user){
-        if(err){console.log('error in finding user in signing up'); return}
-
+    try{
+        let user=await User.findOne({email: req.body.email});
         if (!user){
-            User.create(req.body, function(err, user){
-                if(err){console.log('error in creating user while signing up'); return}
-                return res.redirect('/user/signIn');
-            });
+            User.create(req.body);
+            req.flash('User Created successfully!');
+            return res.redirect('/user/signIn');
         }else{
             return res.redirect('back');
         }
-
-    });
+    }
+    catch{
+        req.flash('error in finding user in signing up','Error'+err);
+        return res.redirect('back');
+    }
 }
 
 
@@ -83,24 +108,27 @@ module.exports.destroySession = function(req, res){
 }
 
 
-module.exports.home=function(req,res){
+module.exports.home=async function(req,res){
+    try{
+        let posts=await Post.find({})
+        .sort('-createdAt')
+        .populate('user')
+        .populate({
+            path: 'comments',
+            populate: {
+                path: 'user'
+            }
+        }).exec();
 
-    Post.find({})
-    .populate('user')
-    .populate({
-        path: 'comments',
-        populate: {
-            path: 'user'
-        }
-    })
-    .exec(function(err, posts){
-        User.find({},function(err,user){
-            return res.render('home', {
-                title: "Codeial | Home",
-                posts:  posts,
-                all_users:user
-            });
+        let user=await User.find({});
+
+        return res.render('home', {
+            title: "Codeial | Home",
+            posts:  posts,
+            all_users:user
         });
-        
-    })
+            
+    }catch(err){
+        req.flash('error','Some Error Occured');
+    }
 }
