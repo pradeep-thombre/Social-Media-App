@@ -25,27 +25,31 @@ module.exports.update=async function(req,res){
         try{
             let user=await User.findById(req.params.id);
             User.uploadedAvatar(req,res,function(err){
-                if(err){console.log('*****Multer error:',err)}
+                if(err){
+                    console.log('*****Multer error:',err);
+                }
+
+                console.log(req.file);
                 user.name=req.body.name;
                 user.email=req.body.email;
                 if(req.file){
                     if(user.avatar){
                         fs.unlinkSync(path.join(__dirname,'..',user.avatar));
                     }
-                    user.avatar=user.avatarPath+'/'+req.file.filename
+                    user.avatar=User.avatarPath+'/'+req.file.filename
                 }
                 user.save();
+                return res.redirect('back');
             });
             req.flash('success','User Details Updated Successfully!');
         }catch(err){
             req.flash('error','Error'+err);
-        }
-        finally{
             return res.redirect('back');
         }
         
     }
     else{
+        req.flash('error',"Unauthorised")
         return res.status(401).send('Unauthorized');
     }
 }
